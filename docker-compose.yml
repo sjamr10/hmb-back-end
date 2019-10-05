@@ -1,0 +1,12 @@
+version: "3.6"
+services:
+  hmb-back-end:
+    build:
+      context: .
+      args:
+        ENV: ${ENV:-dev}
+    image: hmb-back-end:${ENV:-dev}
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/go/src/github.com/sjamr10/hmb-back-end
