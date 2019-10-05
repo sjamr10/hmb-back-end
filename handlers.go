@@ -13,31 +13,25 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
 }
 
-type chat struct {
-	ReceiverID string
-	Msg        string
+type msg struct {
+	Type string
+	Data string
 }
 
-type data struct {
-	ID       string
-	Location string
-	Chat     chat
-}
-
-func readMsg(conn *websocket.Conn) data {
-	var data data
+func readMsg(conn *websocket.Conn) msg {
+	var msg msg
 	// Read in a message
-	err := conn.ReadJSON(&data)
+	err := conn.ReadJSON(&msg)
 	if err != nil {
 		log.Println(err)
-		return data
+		return msg
 	}
-	fmt.Println(data)
-	return data
+	fmt.Println(msg)
+	return msg
 }
 
-func sendMsg(data data, conn *websocket.Conn) {
-	if err := conn.WriteJSON(data); err != nil {
+func sendMsg(msg msg, conn *websocket.Conn) {
+	if err := conn.WriteJSON(msg); err != nil {
 		log.Println(err)
 		return
 	}
@@ -47,6 +41,8 @@ func sendMsg(data data, conn *websocket.Conn) {
 // new messages being sent to our WebSocket
 // endpoint
 func reader(conn *websocket.Conn) {
+	msg := msg{Type: "id", Data: "user1"}
+	sendMsg(msg, conn)
 	for {
 		data := readMsg(conn)
 		sendMsg(data, conn)
@@ -63,15 +59,12 @@ var upgrader = websocket.Upgrader{
 // WsEndpoint ...
 func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
 	// Upgrade this connection to a WebSocket connection
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 	}
-
 	log.Println("Client Connected")
-
 	// Listen indefinitely for new messages coming
 	// through on our WebSocket connection
 	reader(ws)
