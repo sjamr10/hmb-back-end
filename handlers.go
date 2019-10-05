@@ -13,6 +13,8 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
 }
 
+var connections = make(map[string]*websocket.Conn)
+
 type msg struct {
 	Type string
 	Data string
@@ -41,6 +43,8 @@ func sendMsg(msg msg, conn *websocket.Conn) {
 // new messages being sent to our WebSocket
 // endpoint
 func reader(conn *websocket.Conn) {
+	connections["user1"] = conn
+
 	msg := msg{Type: "id", Data: "user1"}
 	sendMsg(msg, conn)
 	for {
