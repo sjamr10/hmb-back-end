@@ -13,25 +13,43 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
 }
 
+type chat struct {
+	ReceiverID string
+	Msg        string
+}
+
+type data struct {
+	ID       string
+	Location string
+	Chat     chat
+}
+
+func readMsg(conn *websocket.Conn) data {
+	var data data
+	// Read in a message
+	err := conn.ReadJSON(&data)
+	if err != nil {
+		log.Println(err)
+		return data
+	}
+	fmt.Println(data)
+	return data
+}
+
+func sendMsg(data data, conn *websocket.Conn) {
+	if err := conn.WriteJSON(data); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
 // Define a reader which will listen for
 // new messages being sent to our WebSocket
 // endpoint
 func reader(conn *websocket.Conn) {
 	for {
-		// Read in a message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		// Print out that message for clarity
-		fmt.Println(string(p))
-
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
+		data := readMsg(conn)
+		sendMsg(data, conn)
 	}
 }
 
@@ -53,10 +71,6 @@ func WsEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Client Connected")
-	err = ws.WriteMessage(1, []byte("Hi Client!"))
-	if err != nil {
-		log.Println(err)
-	}
 
 	// Listen indefinitely for new messages coming
 	// through on our WebSocket connection
