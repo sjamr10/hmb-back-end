@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -13,7 +14,7 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
 }
 
-var connections = make(map[string]*websocket.Conn)
+var connections = make(map[uuid.UUID]*websocket.Conn)
 
 type msg struct {
 	Type string
@@ -29,6 +30,13 @@ func readMsg(conn *websocket.Conn) msg {
 		return msg
 	}
 	fmt.Println(msg)
+
+	switch msg.Type {
+	case "location":
+		// TODO: Update location
+	case "message":
+		// TODO: Send message
+	}
 	return msg
 }
 
@@ -43,13 +51,12 @@ func sendMsg(msg msg, conn *websocket.Conn) {
 // new messages being sent to our WebSocket
 // endpoint
 func reader(conn *websocket.Conn) {
-	connections["user1"] = conn
-
-	msg := msg{Type: "id", Data: "user1"}
+	uuid := uuid.New()
+	connections[uuid] = conn
+	msg := msg{Type: "id", Data: string(uuid[:])}
 	sendMsg(msg, conn)
 	for {
-		data := readMsg(conn)
-		sendMsg(data, conn)
+		readMsg(conn)
 	}
 }
 
