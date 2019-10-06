@@ -17,8 +17,8 @@ func HomePage(w http.ResponseWriter, r *http.Request) {
 var connections = make(map[uuid.UUID]*websocket.Conn)
 
 type msg struct {
-	Type string
-	Data string
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
 }
 
 func readMsg(conn *websocket.Conn) msg {
@@ -53,7 +53,7 @@ func sendMsg(msg msg, conn *websocket.Conn) {
 func reader(conn *websocket.Conn) {
 	uuid := uuid.New()
 	connections[uuid] = conn
-	msg := msg{Type: "id", Data: string(uuid[:])}
+	msg := msg{Type: "id", Data: uuid}
 	sendMsg(msg, conn)
 	for {
 		readMsg(conn)
